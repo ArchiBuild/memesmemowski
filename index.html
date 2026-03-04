@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Papież Chaos</title>
+
+<style>
+body {
+  background: white;
+  overflow: hidden;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  transition: background 0.1s linear;
+}
+
+#info {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  top: 20px;
+  font-size: 28px;
+  z-index: 10;
+}
+
+#papiez {
+  width: 300px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+
+.latajacy-tekst {
+  position: absolute;
+  font-size: 50px;
+  font-weight: bold;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+#flash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.maly-papiez {
+  position: absolute;
+  width: 40px;
+  pointer-events: none;
+}
+</style>
+</head>
+
+<body>
+
+<h1 id="info">Kliknij trzy razy w papieża</h1>
+
+<img id="papiez" src="https://i.ibb.co/4Rh6vwS9/PAPIEZ-2.png" />
+
+<audio id="muzyka" src="https://files.catbox.moe/bq8d6t.mp3"></audio>
+<audio id="boom" src="https://files.catbox.moe/e65w9f.mp3"></audio>
+
+<div id="flash"></div>
+
+<script>
+let klikniecia = 0;
+let chaos = false;
+let glitchInterval;
+let backgroundInterval;
+let kremowkaMode = false;
+
+const papiez = document.getElementById("papiez");
+const muzyka = document.getElementById("muzyka");
+const boom = document.getElementById("boom");
+const info = document.getElementById("info");
+const flash = document.getElementById("flash");
+
+papiez.addEventListener("click", () => {
+  klikniecia++;
+  if (klikniecia === 3 && !chaos) {
+    info.style.display = "none";
+    startChaos();
+  }
+});
+
+function startChaos() {
+  chaos = true;
+  klikniecia = 0;
+
+  muzyka.volume = 1;
+  muzyka.currentTime = 0;
+  muzyka.play();
+
+  startFlashingBackground();
+
+  papiez.style.transform = "none";
+
+  let x = window.innerWidth / 2;
+  let y = window.innerHeight / 2;
+  let dx = 20;
+  let dy = 20;
+
+  setInterval(() => {
+    x += dx;
+    y += dy;
+
+    if (x <= 0 || x >= window.innerWidth - papiez.offsetWidth) dx *= -1;
+    if (y <= 0 || y >= window.innerHeight - papiez.offsetHeight) dy *= -1;
+
+    papiez.style.left = x + "px";
+    papiez.style.top = y + "px";
+  }, 16);
+
+  startTextRain();
+  setTimeout(startGlitchTrail, 15000);
+  setTimeout(explosion, 25000);
+
+  // po 50 sekundach kremówka
+  setTimeout(startKremowkaIntro, 50000);
+}
+
+function startFlashingBackground() {
+  backgroundInterval = setInterval(() => {
+    document.body.style.background =
+      "hsl(" + Math.random() * 360 + ", 100%, 50%)";
+  }, 80);
+}
+
+function startTextRain() {
+  const teksty = ["KREMÓWKI","TAK BYŁO","HABEMUS MEMUS","2137","PAPIEŻ CORE"];
+
+  setInterval(() => {
+    const napis = document.createElement("div");
+    napis.className = "latajacy-tekst";
+    napis.innerText = teksty[Math.floor(Math.random() * teksty.length)];
+
+    napis.style.left = Math.random() * window.innerWidth + "px";
+    napis.style.top = Math.random() * window.innerHeight + "px";
+    napis.style.transform =
+      "rotate(" + Math.random() * 360 + "deg) scale(" + (1 + Math.random()) + ")";
+    napis.style.color =
+      "hsl(" + Math.random() * 360 + ", 100%, 50%)";
+
+    document.body.appendChild(napis);
+    setTimeout(() => napis.remove(), 800);
+  }, 70);
+}
+
+function startGlitchTrail() {
+  glitchInterval = setInterval(() => {
+    const clone = papiez.cloneNode(true);
+    clone.style.position = "absolute";
+    clone.style.left = papiez.style.left;
+    clone.style.top = papiez.style.top;
+    clone.style.opacity = 0.4;
+    clone.style.pointerEvents = "none";
+    document.body.appendChild(clone);
+    setTimeout(() => clone.remove(), 2000);
+  }, 40);
+}
+
+function explosion() {
+  clearInterval(glitchInterval);
+  boom.currentTime = 0;
+  boom.play();
+
+  flash.style.opacity = "1";
+  setTimeout(() => flash.style.opacity = "0", 120);
+
+  papiez.remove();
+}
+
+/* ================== KREMÓWKA ================== */
+
+function startKremowkaIntro() {
+
+  muzyka.pause();
+
+  const napis = document.createElement("h1");
+  napis.innerText = "Kliknij 3 razy w kremówkę";
+  napis.style.position = "fixed";
+  napis.style.top = "15%";
+  napis.style.width = "100%";
+  napis.style.textAlign = "center";
+  napis.style.fontSize = "50px";
+  napis.style.color = "white";
+  napis.style.zIndex = "9999";
+  document.body.appendChild(napis);
+
+  const krem = document.createElement("img");
+  krem.src = "https://i.ibb.co/bjy7SGwm/OIP.webp";
+  krem.style.position = "absolute";
+  krem.style.width = "200px";
+  krem.style.left = "50%";
+  krem.style.top = "50%";
+  krem.style.transform = "translate(-50%,-50%)";
+  krem.style.cursor = "pointer";
+  document.body.appendChild(krem);
+
+  let klik = 0;
+
+  krem.addEventListener("click", () => {
+    klik++;
+    if (klik === 3 && !kremowkaMode) {
+      kremowkaMode = true;
+      napis.remove();
+      startKremowkaChaos(krem);
+    }
+  });
+}
+
+function startKremowkaChaos(krem) {
+
+  muzyka.play();
+
+  let x = window.innerWidth / 2;
+  let y = window.innerHeight / 2;
+  let dx = 20;
+  let dy = 20;
+
+  const move = setInterval(() => {
+    x += dx;
+    y += dy;
+
+    if (x <= 0 || x >= window.innerWidth - krem.offsetWidth) dx *= -1;
+    if (y <= 0 || y >= window.innerHeight - krem.offsetHeight) dy *= -1;
+
+    krem.style.left = x + "px";
+    krem.style.top = y + "px";
+  }, 16);
+
+  setTimeout(() => {
+    setInterval(() => {
+      const clone = krem.cloneNode(true);
+      clone.style.position = "absolute";
+      clone.style.left = krem.style.left;
+      clone.style.top = krem.style.top;
+      clone.style.opacity = "0.4";
+      clone.style.pointerEvents = "none";
+      document.body.appendChild(clone);
+      setTimeout(() => clone.remove(), 1500);
+    }, 40);
+  }, 5000);
+
+  setTimeout(() => {
+    clearInterval(move);
+    boom.currentTime = 0;
+    boom.play();
+    krem.remove();
+  }, 10000);
+}
+</script>
+
+</body>
+</html>
