@@ -22,23 +22,6 @@ body {
   z-index: 10;
 }
 
-#papiez {
-  width: 300px;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  cursor: pointer;
-}
-
-.latajacy-tekst {
-  position: absolute;
-  font-size: 50px;
-  font-weight: bold;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
 #flash {
   position: fixed;
   top: 0;
@@ -51,7 +34,7 @@ body {
   z-index: 1000;
 }
 
-.maly-papiez {
+.maly {
   position: absolute;
   width: 40px;
   pointer-events: none;
@@ -61,201 +44,218 @@ body {
 
 <body>
 
-<h1 id="info">Kliknij trzy razy w papieża</h1>
+<h1 id="info"></h1>
 
-<img id="papiez" src="https://i.ibb.co/4Rh6vwS9/PAPIEZ-2.png" />
-
-<audio id="muzyka" src="https://files.catbox.moe/bq8d6t.mp3"></audio>
+<audio id="muzyka" src="https://files.catbox.moe/bq8d6t.mp3" loop></audio>
 <audio id="boom" src="https://files.catbox.moe/e65w9f.mp3"></audio>
 
 <div id="flash"></div>
 
 <script>
+let currentMode = "papiez";
 let klikniecia = 0;
-let chaos = false;
+let moveInterval;
 let glitchInterval;
 let backgroundInterval;
-let kremowkaMode = false;
 
-const papiez = document.getElementById("papiez");
 const muzyka = document.getElementById("muzyka");
 const boom = document.getElementById("boom");
 const info = document.getElementById("info");
 const flash = document.getElementById("flash");
 
-papiez.addEventListener("click", () => {
-  klikniecia++;
-  if (klikniecia === 3 && !chaos) {
-    info.style.display = "none";
-    startChaos();
-  }
-});
+/* START */
+startPapiez();
 
-function startChaos() {
-  chaos = true;
+/* PAPIEŻ */
+function startPapiez() {
+  resetScreen();
+  currentMode = "papiez";
   klikniecia = 0;
 
+  info.innerText = "Kliknij trzy razy w papieża";
+  info.style.display = "block";
+
+  createMainImage(
+    "https://i.ibb.co/4Rh6vwS9/PAPIEZ-2.png",
+    300
+  );
+}
+
+/* KREMÓWKA */
+function startKremowka() {
+  resetScreen();
+  currentMode = "kremowka";
+  klikniecia = 0;
+
+  info.innerText = "Kliknij trzy razy w kremówkę";
+  info.style.display = "block";
+
+  createMainImage(
+    "https://i.ibb.co/bjy7SGwm/OIP.webp",
+    220
+  );
+}
+
+/* TWORZENIE GŁÓWNEGO OBRAZU */
+function createMainImage(src, size) {
+  const img = document.createElement("img");
+  img.id = "main";
+  img.src = src;
+  img.style.width = size + "px";
+  img.style.position = "absolute";
+  img.style.left = "50%";
+  img.style.top = "50%";
+  img.style.transform = "translate(-50%, -50%)";
+  img.style.cursor = "pointer";
+
+  document.body.appendChild(img);
+
+  img.addEventListener("click", () => {
+    klikniecia++;
+    if (klikniecia === 3) {
+      info.style.display = "none";
+      startChaos(img, src);
+    }
+  });
+}
+
+/* CHAOS */
+function startChaos(img, src) {
+
   muzyka.volume = 1;
-  muzyka.currentTime = 0;
   muzyka.play();
 
   startFlashingBackground();
-
-  papiez.style.transform = "none";
 
   let x = window.innerWidth / 2;
   let y = window.innerHeight / 2;
   let dx = 20;
   let dy = 20;
 
-  setInterval(() => {
+  moveInterval = setInterval(() => {
     x += dx;
     y += dy;
 
-    if (x <= 0 || x >= window.innerWidth - papiez.offsetWidth) dx *= -1;
-    if (y <= 0 || y >= window.innerHeight - papiez.offsetHeight) dy *= -1;
+    if (x <= 0 || x >= window.innerWidth - img.offsetWidth) dx *= -1;
+    if (y <= 0 || y >= window.innerHeight - img.offsetHeight) dy *= -1;
 
-    papiez.style.left = x + "px";
-    papiez.style.top = y + "px";
+    img.style.left = x + "px";
+    img.style.top = y + "px";
   }, 16);
 
-  startTextRain();
-  setTimeout(startGlitchTrail, 15000);
-  setTimeout(explosion, 25000);
+  setTimeout(() => startTrail(img), 5000);
 
-  // po 50 sekundach kremówka
-  setTimeout(startKremowkaIntro, 50000);
+  setTimeout(() => {
+    explosion(img, src);
+  }, 15000);
 }
 
-function startFlashingBackground() {
-  backgroundInterval = setInterval(() => {
-    document.body.style.background =
-      "hsl(" + Math.random() * 360 + ", 100%, 50%)";
-  }, 80);
-}
-
-function startTextRain() {
-  const teksty = ["KREMÓWKI","TAK BYŁO","HABEMUS MEMUS","2137","PAPIEŻ CORE"];
-
-  setInterval(() => {
-    const napis = document.createElement("div");
-    napis.className = "latajacy-tekst";
-    napis.innerText = teksty[Math.floor(Math.random() * teksty.length)];
-
-    napis.style.left = Math.random() * window.innerWidth + "px";
-    napis.style.top = Math.random() * window.innerHeight + "px";
-    napis.style.transform =
-      "rotate(" + Math.random() * 360 + "deg) scale(" + (1 + Math.random()) + ")";
-    napis.style.color =
-      "hsl(" + Math.random() * 360 + ", 100%, 50%)";
-
-    document.body.appendChild(napis);
-    setTimeout(() => napis.remove(), 800);
-  }, 70);
-}
-
-function startGlitchTrail() {
+/* DUCHY */
+function startTrail(img) {
   glitchInterval = setInterval(() => {
-    const clone = papiez.cloneNode(true);
+    const clone = img.cloneNode(true);
     clone.style.position = "absolute";
-    clone.style.left = papiez.style.left;
-    clone.style.top = papiez.style.top;
+    clone.style.left = img.style.left;
+    clone.style.top = img.style.top;
     clone.style.opacity = 0.4;
     clone.style.pointerEvents = "none";
     document.body.appendChild(clone);
-    setTimeout(() => clone.remove(), 2000);
+    setTimeout(() => clone.remove(), 1500);
   }, 40);
 }
 
-function explosion() {
+/* WYBUCH */
+function explosion(img, src) {
+
+  clearInterval(moveInterval);
   clearInterval(glitchInterval);
+
   boom.currentTime = 0;
   boom.play();
 
   flash.style.opacity = "1";
   setTimeout(() => flash.style.opacity = "0", 120);
 
-  papiez.remove();
-}
+  img.remove();
 
-/* ================== KREMÓWKA ================== */
+  startRain(src);
+  startSide(src);
 
-function startKremowkaIntro() {
-
-  muzyka.pause();
-
-  const napis = document.createElement("h1");
-  napis.innerText = "Kliknij 3 razy w kremówkę";
-  napis.style.position = "fixed";
-  napis.style.top = "15%";
-  napis.style.width = "100%";
-  napis.style.textAlign = "center";
-  napis.style.fontSize = "50px";
-  napis.style.color = "white";
-  napis.style.zIndex = "9999";
-  document.body.appendChild(napis);
-
-  const krem = document.createElement("img");
-  krem.src = "https://i.ibb.co/bjy7SGwm/OIP.webp";
-  krem.style.position = "absolute";
-  krem.style.width = "200px";
-  krem.style.left = "50%";
-  krem.style.top = "50%";
-  krem.style.transform = "translate(-50%,-50%)";
-  krem.style.cursor = "pointer";
-  document.body.appendChild(krem);
-
-  let klik = 0;
-
-  krem.addEventListener("click", () => {
-    klik++;
-    if (klik === 3 && !kremowkaMode) {
-      kremowkaMode = true;
-      napis.remove();
-      startKremowkaChaos(krem);
+  setTimeout(() => {
+    if (currentMode === "papiez") {
+      startKremowka();
+    } else {
+      startPapiez();
     }
-  });
+  }, 6000);
 }
 
-function startKremowkaChaos(krem) {
+/* DESZCZ */
+function startRain(src) {
+  const rain = setInterval(() => {
+    const mini = document.createElement("img");
+    mini.src = src;
+    mini.className = "maly";
+    mini.style.left = Math.random() * window.innerWidth + "px";
+    mini.style.top = "-50px";
+    document.body.appendChild(mini);
 
-  muzyka.play();
+    let posY = -50;
+    let speed = 5 + Math.random() * 8;
 
-  let x = window.innerWidth / 2;
-  let y = window.innerHeight / 2;
-  let dx = 20;
-  let dy = 20;
+    const fall = setInterval(() => {
+      posY += speed;
+      mini.style.top = posY + "px";
+      if (posY > window.innerHeight) {
+        mini.remove();
+        clearInterval(fall);
+      }
+    }, 16);
+  }, 40);
 
-  const move = setInterval(() => {
-    x += dx;
-    y += dy;
+  setTimeout(() => clearInterval(rain), 5000);
+}
 
-    if (x <= 0 || x >= window.innerWidth - krem.offsetWidth) dx *= -1;
-    if (y <= 0 || y >= window.innerHeight - krem.offsetHeight) dy *= -1;
+/* ATAK Z BOKU */
+function startSide(src) {
+  const side = setInterval(() => {
+    const flat = document.createElement("img");
+    flat.src = src;
+    flat.style.position = "absolute";
+    flat.style.top = Math.random() * window.innerHeight + "px";
+    flat.style.left = "-400px";
+    flat.style.transform = "scaleX(2.5) scaleY(0.3)";
+    flat.style.width = "250px";
+    document.body.appendChild(flat);
 
-    krem.style.left = x + "px";
-    krem.style.top = y + "px";
-  }, 16);
+    let posX = -400;
+    const fly = setInterval(() => {
+      posX += 40;
+      flat.style.left = posX + "px";
+      if (posX > window.innerWidth + 400) {
+        flat.remove();
+        clearInterval(fly);
+      }
+    }, 16);
+  }, 120);
 
-  setTimeout(() => {
-    setInterval(() => {
-      const clone = krem.cloneNode(true);
-      clone.style.position = "absolute";
-      clone.style.left = krem.style.left;
-      clone.style.top = krem.style.top;
-      clone.style.opacity = "0.4";
-      clone.style.pointerEvents = "none";
-      document.body.appendChild(clone);
-      setTimeout(() => clone.remove(), 1500);
-    }, 40);
-  }, 5000);
+  setTimeout(() => clearInterval(side), 5000);
+}
 
-  setTimeout(() => {
-    clearInterval(move);
-    boom.currentTime = 0;
-    boom.play();
-    krem.remove();
-  }, 10000);
+/* TĘCZOWE TŁO */
+function startFlashingBackground() {
+  clearInterval(backgroundInterval);
+  backgroundInterval = setInterval(() => {
+    document.body.style.background =
+      "hsl(" + Math.random() * 360 + ", 100%, 50%)";
+  }, 80);
+}
+
+/* RESET */
+function resetScreen() {
+  document.querySelectorAll("#main").forEach(e => e.remove());
+  document.querySelectorAll(".maly").forEach(e => e.remove());
+  document.body.style.background = "white";
 }
 </script>
 
